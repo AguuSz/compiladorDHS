@@ -1,0 +1,16 @@
+*~
+#*
+target
+.antlr
+__pycache__
+compiladores*.java
+compiladores*.py
+*.class
+*.out
+*.jar
+*.tokens
+compilador.interp
+compiladorLexer.interp
+compiladorLexer.py
+compiladorListener.py
+compiladorParser.py

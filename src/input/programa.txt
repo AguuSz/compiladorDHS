@@ -1,0 +1,32 @@
+int sumar(int a, int b) {
+  int r = a + b;
+  return r;
+}
+
+int main() {
+    int a = 5, b = 10;
+    int resultado;
+
+    int res;
+    int res = 5;
+    
+    if (a < b) {
+        resultado = a + b;
+    } else {
+        resultado = a - b;
+    }
+
+    for (int i = 0; i < 10; i++) {
+        resultado = resultado + i;
+    }
+
+    while (resultado > 0) {
+        resultado--;
+    }
+
+    do {
+        resultado++;
+    } while (resultado < 5);
+
+    return resultado;
+}
