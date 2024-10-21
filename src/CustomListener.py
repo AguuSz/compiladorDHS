@@ -16,6 +16,7 @@ class CustomListener(compiladorListener):
         # Cuenta el contexto en el que se está trabajando
         self.counter = 0
 
+        self.show_warnings = False
         self.file = "./output/tablaSimbolos.txt"
 
     def write_context(self, context_number):
@@ -32,6 +33,7 @@ class CustomListener(compiladorListener):
 
     def enterPrograma(self, ctx: compiladorParser.ProgramaContext):
         self.f = open(self.file, "w")
+        print("Warnings activadas: " + str(self.show_warnings) + "\n")
 
     def exitPrograma(self, ctx: compiladorParser.ProgramaContext):
         # Si el contador de contextos es mayor a 0, significa que hay contextos que no se han cerrado
@@ -44,10 +46,11 @@ class CustomListener(compiladorListener):
                 and self.idList[variable]["kind"] == "variable"
                 and variable in self.valuesTable.ts[-1]
             ):
-                line = self.idList[variable]["line"]
-                print(
-                    f'[{line}] WARNING: La variable "{variable}" fue declarada pero no inicializada.'
-                )
+                if self.show_warnings:
+                    line = self.idList[variable]["line"]
+                    print(
+                        f'[{line}] WARNING: La variable "{variable}" fue declarada pero no inicializada.'
+                    )
 
         # Cerramos el archivo de salida
         self.f.close()
@@ -55,7 +58,7 @@ class CustomListener(compiladorListener):
         self.valuesTable.del_context()
 
         # Imprimimos mensajes de éxito
-        print("Tabla de símbolos generada con éxito!")
+        print("\nTabla de símbolos generada con éxito!")
         print("Se ha guardado en el archivo " + self.file)
 
     def enterBloqueInstruccion(self, ctx: compiladorParser.BloqueInstruccionContext):
@@ -90,7 +93,10 @@ class CustomListener(compiladorListener):
         pass
 
     def exitDoWhileInstruccion(self, ctx: compiladorParser.DoWhileInstruccionContext):
-        pass
+        last_child = ctx.getChild(ctx.getChildCount() - 1)
+        if last_child.getText() != ";":
+            line = ctx.start.line
+            print(f'[{line}] ERROR: Falta un ";" al final de la instrucción')
 
     def enterForInstruccion(self, ctx: compiladorParser.ForInstruccionContext):
         self.valuesTable.add_context()
@@ -139,7 +145,7 @@ class CustomListener(compiladorListener):
                     f'[{line}] ERROR: La variable "{first_child.getText()}" no está declarada'
                 )
             # Compruebo que la variable haya sido inicializada
-            if first_child.getText() not in self.initializedList:
+            if self.show_warnings and first_child.getText() not in self.initializedList:
                 print(
                     f'[{line}] WARNING: La variable "{first_child.getText()}" no ha sido inicializada'
                 )
@@ -152,7 +158,7 @@ class CustomListener(compiladorListener):
                 print(
                     f'[{line}] ERROR: La variable "{third_child.getText()}" no está declarada'
                 )
-            if third_child.getText() not in self.initializedList:
+            if self.show_warnings and third_child.getText() not in self.initializedList:
                 print(
                     f'[{line}] WARNING: La variable "{third_child.getText()}" no ha sido inicializada'
                 )
@@ -174,7 +180,7 @@ class CustomListener(compiladorListener):
                 )
 
             # Compruebo que la variable haya sido inicializada
-            if first_child.getText() not in self.initializedList:
+            if self.show_warnings and first_child.getText() not in self.initializedList:
                 print(
                     f'[{line}] WARNING: La variable "{first_child.getText()}" no ha sido inicializada'
                 )
@@ -185,11 +191,15 @@ class CustomListener(compiladorListener):
     def exitAsignacion(self, ctx: compiladorParser.AsignacionContext):
         line = ctx.start.line
         name = ctx.getChild(0).getText()
+        last_child = ctx.getChild(ctx.getChildCount() - 1)
         if self.valuesTable.findKey(str(name)):
             self.initializedList.append(str(name))
         else:
             # Uso de un identificador no declarado
             print(f'[{line}] ERROR: La variable "{name}" no está declarada')
+
+        if last_child.getText() != ";":
+            print(f'[{line}] ERROR: Falta un ";" al final de la instrucción')
 
     def enterAsignacionFuncion(self, ctx: compiladorParser.AsignacionFuncionContext):
         pass
@@ -201,6 +211,10 @@ class CustomListener(compiladorListener):
             print(
                 f'[{line}] ERROR: La función "{key}" no está declarada o no existe en este contexto'
             )
+
+        last_child = ctx.getChild(ctx.getChildCount() - 1)
+        if last_child.getText() != ";":
+            print(f'[{line}] ERROR: Falta un ";" al final de la instrucción')
 
     def enterDeclaracionVariable(
         self, ctx: compiladorParser.DeclaracionVariableContext
@@ -226,6 +240,9 @@ class CustomListener(compiladorListener):
                         if ctx.getChild(i + 1).getText() == "=":
                             # Si la variable se inicializa en el momento de la declaración
                             self.initializedList.append(name)
+        last_child = ctx.getChild(ctx.getChildCount() - 1)
+        if last_child.getText() != ";":
+            print(f'[{line}] ERROR: Falta un ";" al final de la instrucción')
 
     def enterDeclaracionFuncion(self, ctx: compiladorParser.DeclaracionFuncionContext):
         pass
@@ -248,3 +265,44 @@ class CustomListener(compiladorListener):
         name = str(ctx.getChild(1).getText())
         if not self.valuesTable.findKey(name):
             self.parametersList[name] = type
+
+    # Enter a parse tree produced by compiladorParser#returnInstruccion.
+    def enterReturnInstruccion(self, ctx: compiladorParser.ReturnInstruccionContext):
+        pass
+
+    # Exit a parse tree produced by compiladorParser#returnInstruccion.
+    def exitReturnInstruccion(self, ctx: compiladorParser.ReturnInstruccionContext):
+        last_child = ctx.getChild(ctx.getChildCount() - 1)
+        if last_child.getText() != ";":
+            line = ctx.start.line
+            print(f'[{line}] ERROR: Falta un ";" al final de la instrucción')
+
+    # Enter a parse tree produced by compiladorParser#llamadoFuncionInstruccion.
+    def enterLlamadoFuncionInstruccion(
+        self, ctx: compiladorParser.LlamadoFuncionInstruccionContext
+    ):
+        pass
+
+    # Exit a parse tree produced by compiladorParser#llamadoFuncionInstruccion.
+    def exitLlamadoFuncionInstruccion(
+        self, ctx: compiladorParser.LlamadoFuncionInstruccionContext
+    ):
+        last_child = ctx.getChild(ctx.getChildCount() - 1)
+        if last_child.getText() != ";":
+            line = ctx.start.line
+            print(f'[{line}] ERROR: Falta un ";" al final de la instrucción')
+
+    # Enter a parse tree produced by compiladorParser#operacionInstruccion.
+    def enterOperacionInstruccion(
+        self, ctx: compiladorParser.OperacionInstruccionContext
+    ):
+        pass
+
+    # Exit a parse tree produced by compiladorParser#operacionInstruccion.
+    def exitOperacionInstruccion(
+        self, ctx: compiladorParser.OperacionInstruccionContext
+    ):
+        last_child = ctx.getChild(ctx.getChildCount() - 1)
+        if last_child.getText() != ";":
+            line = ctx.start.line
+            print(f'[{line}] ERROR: Falta un ";" al final de la instrucción')

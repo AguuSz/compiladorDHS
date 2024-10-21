@@ -8,6 +8,7 @@ int main() {
     int resultado;
 
     int res;
+    res = sumar(5, 10);
     
     if (a < c) {
         resultado = a + d;

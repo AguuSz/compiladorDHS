@@ -154,4 +154,4 @@ decremento: ID DECREMENTO;
 returnInstruccion: RETURN expresion? PYC;
 
 asignacion: ID ASIG expresion PYC;
-asignacionFuncion: ID ASIG ID PA parametrosFuncion PC PYC;
+asignacionFuncion: ID ASIG llamadoFuncionInstruccion;
