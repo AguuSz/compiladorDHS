@@ -1,7 +1,7 @@
 from compiladorListener import compiladorListener
 from compiladorParser import compiladorParser
 from ValuesTable import *
-
+from antlr4 import TerminalNode
 
 class CustomListener(compiladorListener):
     def __init__(self):
@@ -111,6 +111,39 @@ class CustomListener(compiladorListener):
         self.write_context(self.counter)
         self.counter -= 1
         self.valuesTable.del_context()
+        
+    # Enter a parse tree produced by compiladorParser#comparacionInstruccion.
+    def enterComparacionInstruccion(self, ctx:compiladorParser.ComparacionInstruccionContext):
+        pass
+
+    # Exit a parse tree produced by compiladorParser#comparacionInstruccion.
+    def exitComparacionInstruccion(self, ctx:compiladorParser.ComparacionInstruccionContext):
+        first_child = ctx.getChild(0)
+        if first_child.getSymbol().type == compiladorParser.ID:
+            # Nos aseguramos que sea un ID
+            # Comparamos si el ID esta declarado o no y usado en la tabla de simbolos
+            if not self.valuesTable.findKey(first_child.getText()):
+                print(f'ERROR: La variable "{first_child.getText()}" no está declarada')
+
+        third_child = ctx.getChild(2)
+        if third_child.getSymbol().type == compiladorParser.ID:
+            # Nos aseguramos que sea un ID
+            # Comparamos si el ID esta declarado o no y usado en la tabla de simbolos
+            if not self.valuesTable.findKey(third_child.getText()):
+                print(f'ERROR: La variable "{third_child.getText()}" no está declarada')
+        
+    # Enter a parse tree produced by compiladorParser#expresion.
+    def enterFactor(self, ctx:compiladorParser.ExpresionContext):
+        pass
+
+    # Exit a parse tree produced by compiladorParser#expresion.
+    def exitFactor(self, ctx:compiladorParser.ExpresionContext):
+        first_child = ctx.getChild(0)
+        if first_child.getSymbol().type == compiladorParser.ID:
+            # Nos aseguramos que sea un ID
+            # Comparamos si el ID esta declarado o no y usado en la tabla de simbolos
+            if not self.valuesTable.findKey(first_child.getText()):
+                print(f'ERROR: La variable "{first_child.getText()}" no está declarada')
 
     def enterAsignacion(self, ctx: compiladorParser.AsignacionContext):
         pass
@@ -139,18 +172,21 @@ class CustomListener(compiladorListener):
         pass
 
     def exitDeclaracionVariable(self, ctx: compiladorParser.DeclaracionVariableContext):
-        name = ctx.getChild(1).getText()
-        if self.valuesTable.findKey(name):
-            # Doble declaración del mismo identificador
-            print(f'ERROR: El identificador "{name}" ya fue declarado.')
-            if name in self.initializedList:
-                self.initializedList.remove(name)  # Remover de la lista de inicializados para evitar warning
-        else:
-            self.idList[name] = "variable"
-            self.valuesTable.ts[-1][name] = variable(name, "variable")
-            if ctx.getChildCount() > 3 and ctx.getChild(2).getText() == "=":
-                # Si la variable se inicializa en el momento de la declaración
-                self.initializedList.append(name)
+        for i in range(0, ctx.getChildCount()):
+          if isinstance(ctx.getChild(i), TerminalNode):
+            if (ctx.getChild(i).getSymbol().type == compiladorParser.ID):
+              name = ctx.getChild(i).getText()
+              if self.valuesTable.findKey(name):
+                  # Doble declaración del mismo identificador
+                  print(f'ERROR: El identificador "{name}" ya fue declarado.')
+                  if name in self.initializedList:
+                      self.initializedList.remove(name)
+              else:
+                  self.idList[name] = "variable"
+                  self.valuesTable.ts[-1][name] = variable(name, "variable")
+                  if ctx.getChildCount() > 3 and ctx.getChild(2).getText() == "=":
+                      # Si la variable se inicializa en el momento de la declaración
+                      self.initializedList.append(name)
 
     def enterDeclaracionFuncion(self, ctx: compiladorParser.DeclaracionFuncionContext):
         pass

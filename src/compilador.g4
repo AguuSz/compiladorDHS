@@ -1,22 +1,22 @@
-grammar compilador ;
+grammar compilador;
 
-fragment LETRA : [A-Za-z] ;
-fragment DIGITO : [0-9] ;
+fragment LETRA: [A-Za-z];
+fragment DIGITO: [0-9];
 
-PA : '(' ;
-PC : ')' ;
-LLA : '{';
-LLC : '}';
-CA : '[';
-CC : ']';
-PYC : ';' ;
-COMA : ',';
+PA: '(';
+PC: ')';
+LLA: '{';
+LLC: '}';
+CA: '[';
+CC: ']';
+PYC: ';';
+COMA: ',';
 
-SUMA : '+';
+SUMA: '+';
 RESTA: '-';
-MULT : '*';
-DIV : '/';
-MOD : '%';
+MULT: '*';
+DIV: '/';
+MOD: '%';
 
 ASIG: '=';
 IGUAL: '==';
@@ -26,145 +26,132 @@ MAYORIGUAL: '>=';
 MENORIGUAL: '<=';
 DISTINTO: '!=';
 
-AND : '&&';
-OR : '||';
-NOT : '!';
+AND: '&&';
+OR: '||';
+NOT: '!';
 
-INCREMENTO : '++';
+INCREMENTO: '++';
 DECREMENTO: '--';
 
-NUMERO : DIGITO+ ;
-FLOTANTES: DIGITO+ '.' DIGITO+ ;
-FLOTANTESNEGATIVOS: '-' FLOTANTES ;
+NUMERO: DIGITO+;
+FLOTANTES: DIGITO+ '.' DIGITO+;
+FLOTANTESNEGATIVOS: '-' FLOTANTES;
 
-INT : 'int' ;
-DO: 'do' ;
-WHILE : 'while' ;
-FOR : 'for' ;
-IF : 'if' ;
+INT: 'int';
+DO: 'do';
+WHILE: 'while';
+FOR: 'for';
+IF: 'if';
 ELSE: 'else';
 RETURN: 'return';
 
-ID: (LETRA | '_') (LETRA | DIGITO | '_')* ;
+ID: (LETRA | '_') (LETRA | DIGITO | '_')*;
 
-WS: [ \t\n\r]+ -> skip ;
-OTRO : . ;
+WS: [ \t\n\r]+ -> skip;
+OTRO: .;
 
 // Raíz del árbol
-programa : instrucciones EOF | PYC ;
+programa: instrucciones EOF | PYC;
 
-instrucciones: instruccion+ ;
+instrucciones: instruccion+;
 
-instruccion : doWhileInstruccion            // PYC
-            | whileInstruccion      
-            | ifInstruccion
-            | forInstruccion
-            | returnInstruccion             // PYC
-            | asignacion                    // PYC
-            | asignacionFuncion             // PYC
-            | llamadoFuncionInstruccion     // PYC
-            | comparacionInstruccion
-            | operacionInstruccion          // PYC
-            | declaracionFuncion
-            | declaracionVariable           // PYC
-            | bloqueInstruccion
-            ;
-
+instruccion:
+    doWhileInstruccion // PYC
+    | whileInstruccion
+    | ifInstruccion
+    | forInstruccion
+    | returnInstruccion // PYC
+    | asignacion // PYC
+    | asignacionFuncion // PYC
+    | llamadoFuncionInstruccion // PYC
+    | comparacionInstruccion
+    | operacionInstruccion // PYC
+    | declaracionFuncion
+    | declaracionVariable // PYC
+    | bloqueInstruccion;
 
 // TODO: separar declaracion de variable y funcion en 2 separados y actualizar el listener.
 
-declaracionVariable 
-    : tipo ID (COMA ID)*
-    | tipo ID ASIG expresion (COMA ID (ASIG expresion))*
-    ;
+declaracionVariable:
+    tipo ID (COMA ID)* PYC
+    | tipo ID (ASIG expresion)? (COMA ID (ASIG expresion)?)* PYC;
 
-declaracionFuncion 
-    : tipo ID PA parametros PC bloqueInstruccion ;
+declaracionFuncion: tipo ID PA parametros PC bloqueInstruccion;
 
-parametros 
-    : parametro (COMA parametro)* 
-    | /* vacío: permite funciones sin parámetros */ ;
+parametros:
+    parametro (COMA parametro)*
+    | /* vacío: permite funciones sin parámetros */;
 
-parametro 
-    : tipo ID ;
+parametro: tipo ID;
 
-tipo 
-    : INT 
-    ;
+tipo: INT;
 
-doWhileInstruccion: DO bloqueInstruccion WHILE PA instruccion PC PYC ;
+doWhileInstruccion:
+    DO bloqueInstruccion WHILE PA instruccion PC PYC;
 
 whileInstruccion: WHILE PA instruccion PC instruccion;
 
-ifInstruccion: IF PA comparacionInstruccion PC bloqueInstruccion (ELSE instruccion)? ;
+ifInstruccion:
+    IF PA comparacionInstruccion PC bloqueInstruccion (
+        ELSE instruccion
+    )?;
 
-forInstruccion: FOR PA declaracionVariable PYC comparacionInstruccion PYC operacionInstruccionFor PC bloqueInstruccion ;
+forInstruccion:
+    FOR PA declaracionVariable comparacionInstruccion PYC operacionInstruccionFor PC
+        bloqueInstruccion;
 
-bloqueInstruccion: LLA instrucciones LLC ;
+bloqueInstruccion: LLA instrucciones LLC;
 
-comparacionInstruccion: ID comparador ID
-                      | ID comparador NUMERO
-                      | NUMERO comparador NUMERO
-                      | NUMERO comparador ID
-                      ;
+comparacionInstruccion:
+    ID comparador ID
+    | ID comparador NUMERO
+    | NUMERO comparador NUMERO
+    | NUMERO comparador ID;
 
-comparador: IGUAL 
-          | MAYOR 
-          | MENOR 
-          | MAYORIGUAL 
-          | MENORIGUAL 
-          | DISTINTO 
-          ;
+comparador:
+    IGUAL
+    | MAYOR
+    | MENOR
+    | MAYORIGUAL
+    | MENORIGUAL
+    | DISTINTO;
 
-operacionInstruccion: expresion PYC
-                    | incremento PYC
-                    | decremento PYC
-                    ;
+operacionInstruccion:
+    expresion PYC
+    | incremento PYC
+    | decremento PYC;
 
 // Aca me hubiese gustado poner un ? para hacer que sea opcional, pero no consideraria los incrementos y decrementos que no son para los FOR
-operacionInstruccionFor    : expresion
-                           | incremento
-                           | decremento 
-                           ;
+operacionInstruccionFor: expresion | incremento | decremento;
 
-expresion: termino sumaResta | lor logicoOR ;
+expresion: termino sumaResta | lor logicoOR;
 
-logicoOR: logicoAND logicoY ;
-lor: OR logicoOR lor
-   | 
-   ;
+logicoOR: logicoAND logicoY;
+lor: OR logicoOR lor |;
 
 logicoAND: termino sumaResta;
 
-logicoY: AND logicoY logicoAND
-    | 
-    ;
+logicoY: AND logicoY logicoAND |;
 
-termino: factor multiplicacionDivision ;
+termino: factor multiplicacionDivision;
 
-sumaResta : SUMA termino sumaResta
-          | RESTA termino sumaResta
-          |
-          ;
+sumaResta: SUMA termino sumaResta | RESTA termino sumaResta |;
 
-factor: ID
-      | NUMERO
-      | PA expresion PC
-      ;
+factor: ID | NUMERO | PA expresion PC;
 
-multiplicacionDivision: MULT factor multiplicacionDivision
-                      | DIV factor multiplicacionDivision
-                      |
-                      ;
+multiplicacionDivision:
+    MULT factor multiplicacionDivision
+    | DIV factor multiplicacionDivision
+    |;
 
 llamadoFuncionInstruccion: ID PA parametrosFuncion PC PYC;
 
-parametrosFuncion: expresion (COMA expresion)* ;
+parametrosFuncion: expresion (COMA expresion)*;
 
-incremento: ID INCREMENTO ;
-decremento: ID DECREMENTO ;
+incremento: ID INCREMENTO;
+decremento: ID DECREMENTO;
 
-returnInstruccion: RETURN expresion? PYC ;
+returnInstruccion: RETURN expresion? PYC;
 
 asignacion: ID ASIG expresion PYC;
 asignacionFuncion: ID ASIG ID PA parametrosFuncion PC PYC;

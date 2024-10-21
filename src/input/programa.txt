@@ -8,11 +8,9 @@ int main() {
     int resultado;
 
     int res;
-
-    y + 5;
     
-    if (a < b) {
-        resultado = a + b;
+    if (a < c) {
+        resultado = a + d;
     } else {
         resultado = a - b;
     }
