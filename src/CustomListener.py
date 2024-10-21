@@ -13,7 +13,7 @@ class CustomListener(compiladorListener):
         self.initializedList = []
         # Almacena los parámetros de las funciones.
         self.parametersList = {}
-        # Cuenta el contexto en el que se esta trabajando
+        # Cuenta el contexto en el que se está trabajando
         self.counter = 0
 
         self.file = "./output/tablaSimbolos.txt"
@@ -41,11 +41,12 @@ class CustomListener(compiladorListener):
         for variable in self.idList:
             if (
                 variable not in self.initializedList
-                and self.idList[variable] == "variable"
+                and self.idList[variable]["kind"] == "variable"
                 and variable in self.valuesTable.ts[-1]
             ):
+                line = self.idList[variable]["line"]
                 print(
-                    f'WARNING: La variable "{variable}" fue declarada pero no inicializada.'
+                    f'[{line}] WARNING: La variable "{variable}" fue declarada pero no inicializada.'
                 )
 
         # Cerramos el archivo de salida
@@ -54,8 +55,8 @@ class CustomListener(compiladorListener):
         self.valuesTable.del_context()
 
         # Imprimimos mensajes de éxito
-        print("Tabla de simbolos generada con exito!")
-        print("Se ha guardado en el archivo" + self.file)
+        print("Tabla de símbolos generada con éxito!")
+        print("Se ha guardado en el archivo " + self.file)
 
     def enterBloqueInstruccion(self, ctx: compiladorParser.BloqueInstruccionContext):
         # Agregamos el contexto a la tabla de símbolos
@@ -63,20 +64,21 @@ class CustomListener(compiladorListener):
         # Incrementamos el contador de contextos
         self.counter += 1
 
-        # Si hay parametros en la lista de parametros, los agregamos al contexto actual
+        # Si hay parámetros en la lista de parámetros, los agregamos al contexto actual
         if self.parametersList:
             for parameter in self.parametersList.keys():
-                # Corroboramos si el parametro ya existe en el contexto actual
+                # Corroboramos si el parámetro ya existe en el contexto actual
                 if not self.valuesTable.findKey(parameter):
                     # Si no existe, lo agregamos al contexto actual
                     self.valuesTable.ts[-1][parameter] = variable(
                         parameter, self.parametersList[parameter]
                     )
                 else:
+                    line = ctx.start.line
                     print(
-                        f'ERROR: La variable "{parameter}" ya existe en este contexto'
+                        f'[{line}] ERROR: La variable "{parameter}" ya existe en este contexto'
                     )
-        # Limpiamos la lista de parametros despues de haberla agregado al contexto
+        # Limpiamos la lista de parámetros después de haberla agregado al contexto
         self.parametersList.clear()
 
     def exitBloqueInstruccion(self, ctx: compiladorParser.BloqueInstruccionContext):
@@ -127,19 +129,33 @@ class CustomListener(compiladorListener):
     def exitComparacionInstruccion(
         self, ctx: compiladorParser.ComparacionInstruccionContext
     ):
+        line = ctx.start.line
         first_child = ctx.getChild(0)
         if first_child.getSymbol().type == compiladorParser.ID:
             # Nos aseguramos que sea un ID
-            # Comparamos si el ID esta declarado o no y usado en la tabla de simbolos
+            # Comparamos si el ID está declarado o no y usado en la tabla de símbolos
             if not self.valuesTable.findKey(first_child.getText()):
-                print(f'ERROR: La variable "{first_child.getText()}" no está declarada')
+                print(
+                    f'[{line}] ERROR: La variable "{first_child.getText()}" no está declarada'
+                )
+            # Compruebo que la variable haya sido inicializada
+            if first_child.getText() not in self.initializedList:
+                print(
+                    f'[{line}] WARNING: La variable "{first_child.getText()}" no ha sido inicializada'
+                )
 
         third_child = ctx.getChild(2)
         if third_child.getSymbol().type == compiladorParser.ID:
             # Nos aseguramos que sea un ID
-            # Comparamos si el ID esta declarado o no y usado en la tabla de simbolos
+            # Comparamos si el ID está declarado o no y usado en la tabla de símbolos
             if not self.valuesTable.findKey(third_child.getText()):
-                print(f'ERROR: La variable "{third_child.getText()}" no está declarada')
+                print(
+                    f'[{line}] ERROR: La variable "{third_child.getText()}" no está declarada'
+                )
+            if third_child.getText() not in self.initializedList:
+                print(
+                    f'[{line}] WARNING: La variable "{third_child.getText()}" no ha sido inicializada'
+                )
 
     # Enter a parse tree produced by compiladorParser#expresion.
     def enterFactor(self, ctx: compiladorParser.ExpresionContext):
@@ -147,32 +163,43 @@ class CustomListener(compiladorListener):
 
     # Exit a parse tree produced by compiladorParser#expresion.
     def exitFactor(self, ctx: compiladorParser.ExpresionContext):
+        line = ctx.start.line
         first_child = ctx.getChild(0)
         if first_child.getSymbol().type == compiladorParser.ID:
             # Nos aseguramos que sea un ID
-            # Comparamos si el ID esta declarado o no y usado en la tabla de simbolos
+            # Comparamos si el ID está declarado o no y usado en la tabla de símbolos
             if not self.valuesTable.findKey(first_child.getText()):
-                print(f'ERROR: La variable "{first_child.getText()}" no está declarada')
+                print(
+                    f'[{line}] ERROR: La variable "{first_child.getText()}" no está declarada'
+                )
+
+            # Compruebo que la variable haya sido inicializada
+            if first_child.getText() not in self.initializedList:
+                print(
+                    f'[{line}] WARNING: La variable "{first_child.getText()}" no ha sido inicializada'
+                )
 
     def enterAsignacion(self, ctx: compiladorParser.AsignacionContext):
         pass
 
     def exitAsignacion(self, ctx: compiladorParser.AsignacionContext):
+        line = ctx.start.line
         name = ctx.getChild(0).getText()
         if self.valuesTable.findKey(str(name)):
             self.initializedList.append(str(name))
         else:
             # Uso de un identificador no declarado
-            print(f'ERROR: La variable "{name}" no está declarada')
+            print(f'[{line}] ERROR: La variable "{name}" no está declarada')
 
     def enterAsignacionFuncion(self, ctx: compiladorParser.AsignacionFuncionContext):
         pass
 
     def exitAsignacionFuncion(self, ctx: compiladorParser.AsignacionFuncionContext):
+        line = ctx.start.line
         key = ctx.getChild(2).getText()
         if not self.valuesTable.findKey(key):
             print(
-                f'ERROR: La función "{key}" no está declarada o no existe en este contexto'
+                f'[{line}] ERROR: La función "{key}" no está declarada o no existe en este contexto'
             )
 
     def enterDeclaracionVariable(
@@ -181,19 +208,22 @@ class CustomListener(compiladorListener):
         pass
 
     def exitDeclaracionVariable(self, ctx: compiladorParser.DeclaracionVariableContext):
+        line = ctx.start.line
         for i in range(0, ctx.getChildCount()):
             if isinstance(ctx.getChild(i), TerminalNode):
                 if ctx.getChild(i).getSymbol().type == compiladorParser.ID:
                     name = ctx.getChild(i).getText()
                     if self.valuesTable.findKey(name):
                         # Doble declaración del mismo identificador
-                        print(f'ERROR: El identificador "{name}" ya fue declarado.')
+                        print(
+                            f'[{line}] ERROR: El identificador "{name}" ya fue declarado.'
+                        )
                         if name in self.initializedList:
                             self.initializedList.remove(name)
                     else:
-                        self.idList[name] = "variable"
+                        self.idList[name] = {"kind": "variable", "line": line}
                         self.valuesTable.ts[-1][name] = variable(name, "variable")
-                        if ctx.getChildCount() > 3 and ctx.getChild(2).getText() == "=":
+                        if ctx.getChild(i + 1).getText() == "=":
                             # Si la variable se inicializa en el momento de la declaración
                             self.initializedList.append(name)
 
@@ -201,19 +231,20 @@ class CustomListener(compiladorListener):
         pass
 
     def exitDeclaracionFuncion(self, ctx: compiladorParser.DeclaracionFuncionContext):
+        line = ctx.start.line
         name = ctx.getChild(1).getText()
         if self.valuesTable.findKey(name):
             # Doble declaración del mismo identificador
-            print(f'ERROR: La función "{name}" ya fue declarada.')
+            print(f'[{line}] ERROR: La función "{name}" ya fue declarada.')
         else:
-            self.idList[name] = "function"
+            self.idList[name] = {"kind": "function", "line": line}
             self.valuesTable.ts[-1][name] = variable(name, "function")
 
     def enterParametro(self, ctx: compiladorParser.ParametroContext):
         pass
 
     def exitParametro(self, ctx: compiladorParser.ParametroContext):
+        type = str(ctx.getChild(0).getText())
         name = str(ctx.getChild(1).getText())
-        tipo = str(ctx.getChild(0).getText())
         if not self.valuesTable.findKey(name):
-            self.parametersList[name] = tipo
+            self.parametersList[name] = type

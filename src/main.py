@@ -5,6 +5,7 @@ from compiladorParser import compiladorParser
 
 from CustomListener import CustomListener
 from CustomErrorListener import CustomErrorListener
+from CustomVisitor import CustomVisitor
 
 
 def main(argv):
@@ -24,6 +25,9 @@ def main(argv):
 
     tree = parser.programa()
     # print(tree.toStringTree(recog=parser))
+
+    # walker = CustomVisitor()
+    # walker.visitPrograma(tree)
 
 
 if __name__ == "__main__":

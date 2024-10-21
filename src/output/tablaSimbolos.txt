@@ -17,6 +17,6 @@ Vacio
 Contexto: 2
 Vacio
 Contexto: 1
-variable a (variable), variable b (variable), variable resultado (variable), variable res (variable), 
+variable a (variable), variable b (variable), variable c (variable), variable resultado (variable), variable res (variable), 
 Contexto: 0
 function sumar (variable), function main (variable), 
