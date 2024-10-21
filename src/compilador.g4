@@ -74,8 +74,8 @@ instruccion : doWhileInstruccion            // PYC
 // TODO: separar declaracion de variable y funcion en 2 separados y actualizar el listener.
 
 declaracionVariable 
-    : tipo ID (COMA ID)* PYC
-    | tipo ID ASIG expresion (COMA ID (ASIG expresion))* PYC
+    : tipo ID (COMA ID)*
+    | tipo ID ASIG expresion (COMA ID (ASIG expresion))*
     ;
 
 declaracionFuncion 
@@ -98,7 +98,7 @@ whileInstruccion: WHILE PA instruccion PC instruccion;
 
 ifInstruccion: IF PA comparacionInstruccion PC bloqueInstruccion (ELSE instruccion)? ;
 
-forInstruccion: FOR PA declaracionVariable comparacionInstruccion PYC operacionInstruccionFor PC bloqueInstruccion ;
+forInstruccion: FOR PA declaracionVariable PYC comparacionInstruccion PYC operacionInstruccionFor PC bloqueInstruccion ;
 
 bloqueInstruccion: LLA instrucciones LLC ;
 
