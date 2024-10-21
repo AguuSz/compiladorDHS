@@ -1,0 +1,22 @@
+Contexto: 1
+int a (variable), int b (variable), variable r (variable), 
+Contexto: 3
+Vacio
+Contexto: 3
+Vacio
+Contexto: 2
+Vacio
+Contexto: 3
+Vacio
+Contexto: 2
+variable i (variable), 
+Contexto: 3
+Vacio
+Contexto: 2
+Vacio
+Contexto: 2
+Vacio
+Contexto: 1
+variable a (variable), variable resultado (variable), variable res (variable), 
+Contexto: 0
+function sumar (variable), function main (variable), 

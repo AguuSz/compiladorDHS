@@ -14,13 +14,14 @@ class CustomListener(compiladorListener):
         self.parametersList = {}
         # Cuenta el contexto en el que se esta trabajando
         self.counter = 0
+        
+        self.file = "./output/tablaSimbolos.txt"
 
     def write_context(self, context_number):
         self.f.write(f"Contexto: {context_number}\n")
         if self.valuesTable.ts[-1]:
             for each in self.valuesTable.ts[-1]:
                 entry = self.valuesTable.ts[-1][each]
-                print("Entry kind: ", entry.getKind())
                 self.f.write(
                     f"{self.valuesTable.ts[-1][each].getType()} {each} ({self.valuesTable.ts[-1][each].getKind()}), "
                 )
@@ -29,7 +30,7 @@ class CustomListener(compiladorListener):
             self.f.write("Vacio\n")
 
     def enterPrograma(self, ctx: compiladorParser.ProgramaContext):
-        self.f = open("./output/tablaSimbolosss.txt", "w")
+        self.f = open(self.file, "w")
 
     def exitPrograma(self, ctx: compiladorParser.ProgramaContext):
         # Si el contador de contextos es mayor a 0, significa que hay contextos que no se han cerrado
@@ -49,7 +50,7 @@ class CustomListener(compiladorListener):
 
         # Imprimimos mensajes de éxito
         print("Tabla de simbolos generada con exito!")
-        print("Se ha guardado en el archivo ./output/tablaSimbolosss.txt")
+        print("Se ha guardado en el archivo" + self.file)
 
     def enterBloqueInstruccion(self, ctx: compiladorParser.BloqueInstruccionContext):
         # Agregamos el contexto a la tabla de símbolos
